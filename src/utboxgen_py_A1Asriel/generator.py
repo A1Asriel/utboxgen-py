@@ -38,8 +38,8 @@ def generate(text: str, asterisk: bool = False, scale: int = 2, image: Optional[
     if isinstance(image, str):
         char = Image.open(image)
         base.alpha_composite(char, (3, 3))
-    text = _bound_text(text, 34 - 2*asterisk - 8*bool(char), asterisk)
-    pos = (14 + 58*bool(char), 10)
+    text = _bound_text(text, 31 - 7*bool(image), asterisk)
+    pos = (14 + 58*bool(image), 10)
 
     d.multiline_text(pos, text, font=fnt, fill=(255, 255, 255), spacing=5)
     d.rectangle((3, 3, 285, 72), None, (0, 0, 0))
