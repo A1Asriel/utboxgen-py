@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "Pillow>=10.2.0,<11.0.0"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "utboxgen-py_A1Asriel"
-version = "0.0.1"
+version = "0.0.5"
 authors = [
   { name="A1Asriel", email="27139654+A1Asriel@users.noreply.github.com" },
 ]
@@ -17,7 +17,13 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+    "Pillow>=10.2.0,<11.0.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/A1Asriel/utboxgen-py"
 Issues = "https://github.com/A1Asriel/utboxgen-py/issues"
+
+[tool.setuptools.package-data]
+"utboxgen_py_A1Asriel.assets" = ["*"]
