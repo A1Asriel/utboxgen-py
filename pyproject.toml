@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "utboxgen-py"
-version = "0.1.0b1"
+version = "0.1.0b2"
 authors = [
   { name="A1Asriel", email="27139654+A1Asriel@users.noreply.github.com" },
 ]

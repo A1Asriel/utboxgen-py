@@ -26,7 +26,7 @@ class BaseTextboxTemplate:
 
     @staticmethod
     def _bound_text(text: str, width: int, prefix: Optional[str] = None):
-        def recurse(line: str):
+        def recurse(line: str, prefix: Optional[str] = None):
             out = ""
             line = prefix + line.strip() if prefix is not None else line.strip()
             length = len(line)
@@ -45,7 +45,7 @@ class BaseTextboxTemplate:
         lines = text.split("\n")
         out = ""
         for line in lines:
-            out += recurse(line)
+            out += recurse(line, prefix)
         out = out.strip()
         if prefix is not None:
             out = "\n".join(
