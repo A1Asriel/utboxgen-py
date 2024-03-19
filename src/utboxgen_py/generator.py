@@ -61,12 +61,12 @@ class BaseTextboxTemplate:
             return image.convert("RGBA")
         if isinstance(image, str):
             try:
-                return Image.open(image)
+                return Image.open(image).convert("RGBA")
             except OSError:
                 return None
         elif isinstance(image, bytes):
             try:
-                return Image.open(BytesIO(image))
+                return Image.open(BytesIO(image)).convert("RGBA")
             except OSError:
                 return None
         else:
