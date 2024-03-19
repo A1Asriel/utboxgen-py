@@ -2,25 +2,25 @@ import os
 from io import BytesIO
 from typing import List, Optional, Tuple, Union
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
 
 
 class BaseTextboxTemplate:
     def __init__(
         self,
-        base_image: Union[Image.Image, bytes, str],
+        base_image: Union[Image.Image, PngImagePlugin.PngImageFile, bytes, str],
         font: Union[ImageFont.FreeTypeFont, bytes, str],
         text_color: Tuple[int, int, int] = (0, 0, 0),
         text_offset: Tuple[int, int] = (0, 0),
-        sprite: Optional[Union[Image.Image, bytes, str]] = None,
+        sprite: Optional[Union[Image.Image, PngImagePlugin.PngImageFile, bytes, str]] = None,
         sprite_offset: Tuple[int, int] = (0, 0),
         scale: int = 1,
     ):
-        self.base_image = self._get_base_image(base_image)
+        self.base_image = self._get_image(base_image)
         self.font = self._get_font(font)
         self.text_color = text_color
         self.text_offset = text_offset
-        self.sprite = self._get_sprite(sprite)
+        self.sprite = self._get_image(sprite)
         self.sprite_offset = sprite_offset
         self.scale = scale
 
@@ -54,28 +54,23 @@ class BaseTextboxTemplate:
             )
         return out
 
-    def _get_base_image(self, base_image: Union[Image.Image, bytes, str]) -> Optional[Image.Image]:
-        if isinstance(base_image, Image.Image):
-            return base_image
-        if isinstance(base_image, str):
+    def _get_image(self, image: Union[Image.Image, PngImagePlugin.PngImageFile, bytes, str]) -> Optional[Image.Image]:
+        if isinstance(image, Image.Image):
+            return image
+        if isinstance(image, PngImagePlugin.PngImageFile):
+            return image.convert("RGBA")
+        if isinstance(image, str):
             try:
-                return Image.open(base_image)
+                return Image.open(image)
             except OSError:
                 return None
-        elif isinstance(base_image, bytes):
+        elif isinstance(image, bytes):
             try:
-                return Image.open(BytesIO(base_image))
+                return Image.open(BytesIO(image))
             except OSError:
                 return None
         else:
             return None
-
-    def set_base_image(self, base_image: Union[Image.Image, bytes, str]) -> bool:
-        img = self._get_base_image(base_image)
-        if img is None:
-            return False
-        self.base_image = img
-        return True
 
     def _get_font(self, font: Union[ImageFont.FreeTypeFont, bytes, str], size: int = 10) -> Optional[ImageFont.FreeTypeFont]:
         if isinstance(font, ImageFont.FreeTypeFont):
@@ -92,6 +87,13 @@ class BaseTextboxTemplate:
                 return None
         return None
 
+    def set_base_image(self, base_image: Union[Image.Image, PngImagePlugin.PngImageFile, bytes, str]) -> bool:
+        img = self._get_image(base_image)
+        if img is None:
+            return False
+        self.base_image = img
+        return True
+
     def set_font(self, font: Union[ImageFont.FreeTypeFont, bytes, str]) -> bool:
         fnt = self._get_font(font)
         if fnt is None:
@@ -99,23 +101,8 @@ class BaseTextboxTemplate:
         self.font = fnt
         return True
 
-    def _get_sprite(self, sprite: Union[Image.Image, bytes, str]) -> Optional[Image.Image]:
-        if isinstance(sprite, Image.Image):
-            return sprite
-        if isinstance(sprite, str):
-            try:
-                return Image.open(sprite)
-            except OSError:
-                return None
-        if isinstance(sprite, bytes):
-            try:
-                return Image.open(BytesIO(sprite))
-            except OSError:
-                return None
-        return None
-
-    def set_sprite(self, sprite: Union[Image.Image, bytes, str]) -> bool:
-        spr = self._get_sprite(sprite)
+    def set_sprite(self, sprite: Union[Image.Image, PngImagePlugin.PngImageFile, bytes, str]) -> bool:
+        spr = self._get_image(sprite)
         if spr is None:
             return False
         self.sprite = spr
@@ -150,7 +137,7 @@ class UTTextboxTemplate(BaseTextboxTemplate):
     def __init__(
         self,
         text_color: Tuple[int, int, int] = (255, 255, 255),
-        sprite: Optional[bytes] = None,
+        sprite: Optional[Union[Image.Image, PngImagePlugin.PngImageFile, bytes, str]] = None,
         scale: int = 2,
     ):
         base_path = os.path.join(os.path.dirname(__file__), "assets", "utbox_base.png")
@@ -170,7 +157,7 @@ class UTTextboxTemplate(BaseTextboxTemplate):
 
 
 class Textbox(BaseTextboxTemplate):
-    def __init__(self, text: str, prefix: Optional[str] = None, *args, **kwargs):
+    def __init__(self, text: str, *args, prefix: Optional[str] = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.text = text
         self.prefix = prefix
@@ -189,7 +176,7 @@ class Textbox(BaseTextboxTemplate):
             scale=textbox.scale,
         )
 
-    def generate(self):
+    def generate(self, *_, **__):
         return super().generate(self.text, self.prefix)
 
 
@@ -198,8 +185,8 @@ def generate_multi(textboxes: List[Textbox], margin: bool = False):
         return None
     base_scale = textboxes[0].scale
     # base_scale = 1  # To prevent huge images
-    true_height = sum([t.base_image.size[1] for t in textboxes])
-    true_width = max([t.base_image.size[0] for t in textboxes])
+    true_height = sum(t.base_image.size[1] for t in textboxes)
+    true_width = max(t.base_image.size[0] for t in textboxes)
     img = Image.new("RGBA", (true_width + 6*margin, true_height + 6*len(textboxes)*margin), (0, 0, 0, 255*margin))
     cur_y_offset = 3*margin
     for textbox in textboxes:
